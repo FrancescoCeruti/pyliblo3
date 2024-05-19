@@ -34,7 +34,7 @@ cdef extern from 'lo/lo.h':
         double d
         unsigned char c
         char s
-        uint8_t m[4]
+        uint8_t[4] m
         lo_timetag t
 
     cdef enum:
@@ -97,7 +97,7 @@ cdef extern from 'lo/lo.h':
     void lo_message_add_false(lo_message m)
     void lo_message_add_nil(lo_message m)
     void lo_message_add_infinitum(lo_message m)
-    void lo_message_add_midi(lo_message m, uint8_t a[4])
+    void lo_message_add_midi(lo_message m, uint8_t[4] a)
     void lo_message_add_timetag(lo_message m, lo_timetag a)
     void lo_message_add_blob(lo_message m, lo_blob a)
     lo_address lo_message_get_source(lo_message m)

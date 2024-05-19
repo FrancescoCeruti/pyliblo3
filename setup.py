@@ -48,14 +48,15 @@ setup(
     ext_modules=[
         Extension(
             'liblo', 
-            sources = ['src/liblo.pyx', 'src/liblo.pxd'],
+            sources=['src/liblo.pyx'],
             extra_compile_args=compile_args,
             libraries=['lo'],
             library_dirs=library_dirs,
-            include_dirs=include_dirs)
+            include_dirs=include_dirs
+        )
     ],
-    setup_requires=['setuptools>=18', 'cython'],
-    install_requires=['cython'],
+    setup_requires=['setuptools>=18', 'cython>=3'],
+    install_requires=['cython>=3'],
     author='Dominic Sacre',
     author_email='dominic.sacre@gmx.de',
     maintainer='Eduardo Moguillansky',

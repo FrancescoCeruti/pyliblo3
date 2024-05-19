@@ -9,12 +9,7 @@
 # License, or (at your option) any later version.
 #
 
-__version__ = '0.10.1'
-
-
-from cpython cimport PY_VERSION_HEX
-cdef extern from 'Python.h':
-    void PyEval_InitThreads()
+__version__ = '0.11.0'
 
 from libc.stdlib cimport malloc, free
 from libc.math cimport modf
@@ -65,7 +60,7 @@ cdef class Callback:
 
     def __init__(self, func, user_data):
         self.func = _weakref_method(func)
-        self.user_data = user_data,
+        self.user_data = user_data
         spec = _inspect.getfullargspec(func)
         numargs = len(spec.args)
         if _inspect.ismethod(func):
@@ -76,7 +71,7 @@ cdef class Callback:
 
 cdef inline str _decode(s):
     # convert to standard string type, depending on python version
-    if PY_VERSION_HEX >= 0x03000000 and isinstance(s, bytes):
+    if isinstance(s, bytes):
         return s.decode()
     else:
         return s
@@ -219,7 +214,7 @@ class ServerError(Exception):
 
 
 cdef int _msg_callback(const_char *path, const_char *types, lo_arg **argv,
-                       int argc, lo_message msg, void *cb_data) with gil:
+                       int argc, lo_message msg, void *cb_data) noexcept with gil:
     cdef int i
     cdef char t
     cdef unsigned char *ptr
@@ -227,7 +222,7 @@ cdef int _msg_callback(const_char *path, const_char *types, lo_arg **argv,
 
     args = []
 
-    for i from 0 <= i < argc:
+    for i in range(argc):
         t = types[i]
         if   t == 'i': v = argv[i].i
         elif t == 'h': v = argv[i].h
@@ -243,7 +238,7 @@ cdef int _msg_callback(const_char *path, const_char *types, lo_arg **argv,
         elif t == 'm': v = (argv[i].m[0], argv[i].m[1], argv[i].m[2], argv[i].m[3])
         elif t == 't': v = _timetag_to_double(argv[i].t)
         elif t == 'b':
-            v = bytes(<unsigned char*>lo_blob_dataptr(argv[i]))
+            v = bytes(<unsigned char*>lo_blob_dataptr(<lo_blob>argv[i]))
         else:
             v = None  # unhandled data type
 
@@ -271,19 +266,19 @@ cdef int _msg_callback(const_char *path, const_char *types, lo_arg **argv,
     return r if r is not None else 0
 
 
-cdef int _bundle_start_callback(lo_timetag t, void *cb_data) with gil:
+cdef int _bundle_start_callback(lo_timetag t, void *cb_data) noexcept with gil:
     cb = <object>cb_data
     r = cb.start_func(_timetag_to_double(t), cb.user_data)
     return r if r is not None else 0
 
 
-cdef int _bundle_end_callback(void *cb_data) with gil:
+cdef int _bundle_end_callback(void *cb_data) noexcept with gil:
     cb = <object>cb_data
     r = cb.end_func(cb.user_data)
     return r if r is not None else 0
 
 
-cdef void _err_handler(int num, const_char *msg, const_char *where) with gil:
+cdef void _err_handler(int num, const_char *msg, const_char *where) noexcept with gil:
     # can't raise exception in cdef callback function, so use a global variable
     # instead
     global __exception
@@ -687,13 +682,10 @@ cdef class ServerThread(_ServerBase):
         cdef char *cs
 
         if port != None:
-            p = _encode(str(port));
+            p = _encode(str(port))
             cs = p
         else:
             cs = NULL
-
-        # make sure python can handle threading
-        PyEval_InitThreads()
 
         global __exception
         __exception = None
@@ -865,10 +857,10 @@ cdef class _Blob:
         try:
             if isinstance(arr[0], (str, unicode)):
                 # use ord() if arr is a string (but not bytes)
-                for i from 0 <= i < size:
+                for i in range(size):
                     p[i] = ord(arr[i])
             else:
-                for i from 0 <= i < size:
+                for i in range(size):
                     p[i] = arr[i]
             # build blob
             self._blob = lo_blob_new(size, p)
@@ -953,7 +945,7 @@ cdef class Message:
         elif t == 'I':
             lo_message_add_infinitum(self._message)
         elif t == 'm':
-            for n from 0 <= n < 4:
+            for n in range(4):
                 midi[n] = value[n]
             lo_message_add_midi(self._message, midi)
         elif t == 't':
